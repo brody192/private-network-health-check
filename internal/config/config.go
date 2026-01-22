@@ -19,11 +19,24 @@ func init() {
 	if err := env.ParseWithOptions(&Global, env.Options{
 		FuncMap: map[reflect.Type]env.ParserFunc{
 			reflect.TypeOf(url.URL{}): func(envVar string) (any, error) {
-				if u, err := url.ParseRequestURI(envVar); err != nil {
+				u, err := url.Parse(envVar)
+				if err != nil {
 					return nil, err
-				} else {
-					return *u, nil
 				}
+
+				if u.Hostname() == "" && u.Port() == "" {
+					return nil, errors.New("missing host and port")
+				}
+
+				if u.Hostname() == "" {
+					return nil, errors.New("missing host")
+				}
+
+				if u.Port() == "" {
+					return nil, errors.New("missing port")
+				}
+
+				return *u, nil
 			},
 		},
 	}); err != nil {
