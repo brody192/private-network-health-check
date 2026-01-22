@@ -118,7 +118,15 @@ func checkReplicasHandler(targetURL url.URL, client *http.Client) http.HandlerFu
 		replicaResponse.OnlineReplicas = replicaResponse.TotalReplicas - replicaResponse.OfflineReplicas
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+
+		status := http.StatusOK
+
+		if replicaResponse.OfflineReplicas > 0 {
+			status = http.StatusBadGateway
+		}
+
+		w.WriteHeader(status)
+
 		json.NewEncoder(w).Encode(replicaResponse)
 	}
 }
