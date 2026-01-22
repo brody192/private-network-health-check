@@ -26,6 +26,8 @@ func checkReplicasHandler(targetURL url.URL, client *http.Client) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		replicaResponse := &ReplicaResponse{}
 
+		totalStartTime := time.Now()
+
 		// Perform an AAAA DNS lookup for the target host (IPv6 only)
 		dnsCtx, dnsCancel := context.WithTimeout(context.Background(), (10 * time.Second))
 		defer dnsCancel()
@@ -103,13 +105,13 @@ func checkReplicasHandler(targetURL url.URL, client *http.Client) http.HandlerFu
 
 		wg.Wait()
 
+		replicaResponse.TotalResponseTime = time.Since(totalStartTime).Milliseconds()
+
 		slices.SortStableFunc(replicaResponse.ReplicaResponses, func(a, b ReplicaResponseItem) int {
 			return bytes.Compare(a.IpAddress, b.IpAddress)
 		})
 
 		for _, replicaResponseItem := range replicaResponse.ReplicaResponses {
-			replicaResponse.TotalResponseTime += replicaResponseItem.ResponseTime
-
 			if replicaResponseItem.Error != nil || (replicaResponseItem.StatusCode < 200 || replicaResponseItem.StatusCode > 299) {
 				replicaResponse.OfflineReplicas++
 			}
