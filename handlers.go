@@ -90,7 +90,7 @@ func checkReplicasHandler(targetURL url.URL, client *http.Client) http.HandlerFu
 
 				replicaResponse.ReplicaResponses[i].StatusCode = resp.StatusCode
 
-				body, err := io.ReadAll(io.LimitReader(resp.Body, 128))
+				body, err := io.ReadAll(io.LimitReader(resp.Body, 256))
 				if err != nil {
 					logger.Stderr.Error(err.Error(), slog.String("target_host", targetURL.Hostname()))
 
